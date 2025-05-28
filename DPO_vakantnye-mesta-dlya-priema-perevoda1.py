@@ -106,7 +106,7 @@ def parse_page(driver, url):
     return result, url
 
 # Функция для сохранения данных в Markdown-файл
-def save_to_markdown(data, url, filename="DPO_vacant_places.md"):
+def save_to_markdown(data, url, filename="PDO_vakantnye-mesta-dlya-priema-perevoda.md"):
     content = []
     content_parts = {
         "title": None,

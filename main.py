@@ -39,39 +39,50 @@ SCRIPTS = [
     "PDO_vakantnye-mesta-dlya-priema-perevoda.py"
 ]
 TIMESTAMP = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-OUTPUT_FILE = os.path.join(BASE_DIR, f"combined_output_{TIMESTAMP}.md")
+OUTPUT_FILE = os.path.join(BASE_DIR, f"Раздел_1_{TIMESTAMP}.md")
 
 
 def run_scripts():
-    """Запускает все скрипты из списка."""
+    """Запускает все скрипты из списка и проверяет создание Markdown-файлов."""
     os.chdir(BASE_DIR)
     python_exe = os.path.join(BASE_DIR, r"..\venv\Scripts\python.exe")
     successful_scripts = []
+    missing_files = []
+
     for script in SCRIPTS:
+        expected_md = os.path.join(BASE_DIR, script.replace(".py", ".md"))
         try:
             print(f"Запуск скрипта: {script}")
             result = subprocess.run([python_exe, script], capture_output=True, text=True, timeout=300)
             if result.returncode == 0:
                 print(f"Скрипт {script} успешно выполнен")
                 successful_scripts.append(script)
-                markdown_files = glob.glob(os.path.join(BASE_DIR, "*.md"))
-                print(f"Файлы после {script}: {markdown_files}")
+                if os.path.exists(expected_md):
+                    print(f"Создан файл: {expected_md}")
+                else:
+                    print(f"Ошибка: файл {expected_md} не создан")
+                    missing_files.append(expected_md)
             else:
                 print(f"Ошибка при выполнении {script}: {result.stderr}")
+                missing_files.append(expected_md)
         except subprocess.TimeoutExpired:
             print(f"Скрипт {script} превысил время выполнения (5 минут)")
+            missing_files.append(expected_md)
         except Exception as e:
             print(f"Исключение при выполнении {script}: {str(e)}")
-    return successful_scripts
+            missing_files.append(expected_md)
+
+    return successful_scripts, missing_files
 
 
-def combine_markdown_files():
-    """Объединяет все Markdown-файлы в один."""
+def combine_markdown_files(missing_files):
+    """Объединяет все Markdown-файлы в один и записывает информацию о пропущенных файлах."""
     markdown_files = glob.glob(os.path.join(BASE_DIR, "*.md"))
     print(f"Найдено Markdown-файлов: {len(markdown_files)}")
     print(f"Список файлов: {markdown_files}")
+
     with open(OUTPUT_FILE, "w", encoding="utf-8") as outfile:
-        outfile.write("# Общий отчет\n\n")
+        outfile.write("# Раздел 1\n\n")
         outfile.write(f"Дата создания: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
 
         if not markdown_files:
@@ -79,6 +90,7 @@ def combine_markdown_files():
             print("Ошибка: Markdown-файлы не найдены.")
             return
 
+        added_files = []
         for md_file in sorted(markdown_files):
             if md_file == OUTPUT_FILE:
                 continue
@@ -88,16 +100,32 @@ def combine_markdown_files():
                     outfile.write(infile.read())
                     outfile.write("\n\n---\n\n")
                 print(f"Файл {md_file} добавлен в итоговый отчет")
+                added_files.append(md_file)
             except Exception as e:
                 print(f"Ошибка при обработке {md_file}: {str(e)}")
+                outfile.write(f"## Ошибка: файл {os.path.basename(md_file)} не добавлен\n\n")
+                outfile.write(f"Причина: {str(e)}\n\n---\n\n")
+
+        if missing_files:
+            outfile.write("## Пропущенные или не созданные файлы\n\n")
+            for missing_file in missing_files:
+                if missing_file not in added_files:
+                    outfile.write(f"- {os.path.basename(missing_file)}: не создан или не добавлен\n")
+                    print(f"Файл {missing_file} не был создан или добавлен")
+            for md_file in markdown_files:
+                expected_mds = [script.replace(".py", ".md") for script in SCRIPTS]
+                if os.path.basename(md_file) not in expected_mds and md_file != OUTPUT_FILE:
+                    outfile.write(f"- {os.path.basename(md_file)}: найден, но не ожидался\n")
+                    print(f"Файл {md_file} найден, но не ожидался")
 
 
 def main():
     print("Запуск обработки скриптов...")
-    successful_scripts = run_scripts()
+    successful_scripts, missing_files = run_scripts()
     print(f"\nУспешно выполнено скриптов: {len(successful_scripts)} из {len(SCRIPTS)}")
+    print(f"Пропущенные файлы: {len(missing_files)}")
     print("\nОбъединение Markdown-файлов...")
-    combine_markdown_files()
+    combine_markdown_files(missing_files)
     print(f"\nИтоговый файл создан: {OUTPUT_FILE}")
 
 

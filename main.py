@@ -6,6 +6,8 @@ import datetime
 BASE_DIR = r"D:\python_work\DPO\DPO"
 SCRIPTS = [
     "DPO_aktsii.py",
+    "DPO_dokument-company.py",
+    "DPO_dokumenty.py",
     "DPO_FAQ.py",
     "DPO_finhozdeyat.py",
     "DPO_glavnaya.py",
@@ -15,8 +17,11 @@ SCRIPTS = [
     "DPO_onas.py",
     "DPO_oplata-obrazovatelnyh-uslug.py",
     "DPO_osnovnye-svedeniya.py",
+    "DPO_partnery.py",
     "DPO_pedagogicheskij-sostav.py",
+    "DPO_platnye-obrazovatelnye-uslugi.py",
     "DPO_rukovodstvo.py",
+    "DPO_rukovodstvo-i-pedagogicheskij-sostav.py",
     "DPO_stipendii-i-inye-vidy-materialnoj-podderzhki.py",
     "DPO_vakantnye-mesta-dlya-priema-perevoda.py",
     "PDO_dostupnaya-sreda-v-ooo-akademiya-dpo.py",

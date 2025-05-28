@@ -167,7 +167,7 @@ def parse_page(driver, url):
     return result
 
 # 💾 Функция сохранения результатов в Markdown-файл
-def save_to_txt(data, filename="DPO_aktsii_results.md"):
+def save_to_txt(data, filename="DPO_aktsii.md"):
     save_path = Path.cwd() / filename
     content = []
 

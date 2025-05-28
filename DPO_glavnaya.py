@@ -271,7 +271,7 @@ def parse_website(url, driver):
     return results
 
 # 💾 Функция сохранения результатов в Markdown-файл
-def save_results_to_file(results, filename="DPO_glavnaya_results.md"):
+def save_results_to_file(results, filename="DPO_glavnaya.md"):
     # Создание пути для сохранения файла в текущей директории
     save_path = Path.cwd() / filename
 

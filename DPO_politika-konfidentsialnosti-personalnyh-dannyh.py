@@ -143,7 +143,7 @@ def parse_page(driver, url):
     return result, url
 
 # Функция для сохранения данных в Markdown-файл
-def save_to_markdown(data, url, filename="DPO_politika_konfidentsialnosti.md"):
+def save_to_markdown(data, url, filename="DPO_politika-konfidentsialnosti-personalnyh-dannyh.md"):
     content = []
     for item in data:
         if item[0] == "title":

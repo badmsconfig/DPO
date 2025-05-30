@@ -59,7 +59,7 @@ def parse_page(driver, url):
     return result, url
 
 # Функция для сохранения данных в Markdown-файл
-def save_to_markdown(data, url, filename="DPO_international_cooperation.md"):
+def save_to_markdown(data, url, filename="DPO_mezhdunarodnoe-sotrudnichestvo.md"):
     content = []
 
     # Формируем контент в логическом порядке

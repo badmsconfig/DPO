@@ -130,7 +130,7 @@ def parse_page(driver, url):
     return result, url
 
 # Функция для сохранения данных в Markdown-файл
-def save_to_markdown(data, url, filename="MBA_courses.md"):
+def save_to_markdown(data, url, filename="DPO_master-of-business-administration-mba.md"):
     content = []
     for item in data:
         if item[0] == "title":

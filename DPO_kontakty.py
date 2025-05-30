@@ -103,7 +103,7 @@ def parse_page(driver, url):
     return result, url
 
 # Функция для сохранения данных в Markdown-файл
-def save_to_markdown(data, url, filename="DPO_contacts.md"):
+def save_to_markdown(data, url, filename="DPO_kontakty.md"):
     content = []
     content.append(f"# Контакты\n[Перейти к странице]({url})")
 

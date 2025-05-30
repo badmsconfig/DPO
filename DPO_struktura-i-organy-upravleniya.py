@@ -8,7 +8,7 @@ from pathlib import Path
 # Словарь селекторов
 SELECTORS = {
     "main_title": (By.CSS_SELECTOR, "h1.page__content-title"),
-    "nutrition_table": (By.CSS_SELECTOR, "div.page__content-desc > div.table > table > tbody > tr"),
+    "structure_table": (By.CSS_SELECTOR, "div.page__content-desc > div.table > table > tbody > tr")
 }
 
 # Функция для настройки и получения веб-драйвера Chrome
@@ -31,14 +31,10 @@ def parse_table(driver, table_locator):
         for row in rows:
             cells = row.find_elements(By.CSS_SELECTOR, "td")
             row_data = []
-            for i, cell in enumerate(cells):
-                if i == 1:  # Колонка "Описание" с несколькими параграфами
-                    paragraphs = cell.find_elements(By.CSS_SELECTOR, "p")
-                    cell_text = "\n".join(p.text.strip() for p in paragraphs if p.text.strip())
-                    row_data.append(cell_text)
-                else:  # Колонка "Требование" с одним параграфом
-                    cell_text = cell.find_element(By.CSS_SELECTOR, "p").text.strip()
-                    row_data.append(cell_text)
+            for cell in cells:
+                paragraphs = cell.find_elements(By.CSS_SELECTOR, "p")
+                cell_text = "\n".join(p.text.strip() for p in paragraphs if p.text.strip())
+                row_data.append(cell_text if cell_text else "—")
             table_data.append(" | ".join(row_data))
         return table_data
     except Exception as e:
@@ -68,19 +64,19 @@ def parse_page(driver, url):
     except Exception as e:
         print(f"Ошибка при парсинге заголовка: {str(e)}")
 
-    # Извлечение таблицы организации питания
+    # Извлечение таблицы структуры и органов управления
     try:
-        nutrition_table = parse_table(driver, SELECTORS["nutrition_table"])
-        if nutrition_table:
-            result.append(("table", {"title": "Организация питания", "content": nutrition_table}))
-            print(f"Таблица организации питания: {nutrition_table}")
+        structure_table = parse_table(driver, SELECTORS["structure_table"])
+        if structure_table:
+            result.append(("table", {"title": "Структура и органы управления", "content": structure_table}))
+            print(f"Таблица структуры и органов управления: {structure_table}")
     except Exception as e:
-        print(f"Ошибка при парсинге таблицы организации питания: {str(e)}")
+        print(f"Ошибка при парсинге таблицы: {str(e)}")
 
     return result, url
 
 # Функция для сохранения данных в Markdown-файл
-def save_to_markdown(data, url, filename="DPO_organizatsiya_pitaniya.md"):
+def save_to_markdown(data, url, filename="DPO_struktura-i-organy-upravleniya.md"):
     content = []
     for item in data:
         if item[0] == "title":
@@ -98,7 +94,7 @@ def save_to_markdown(data, url, filename="DPO_organizatsiya_pitaniya.md"):
 
 # Основной блок программы
 if __name__ == "__main__":
-    TARGET_URL = "https://academydpo.org/organizatsiya-pitaniya"
+    TARGET_URL = "https://academydpo.org/struktura-i-organy-upravleniya"
     driver = get_driver()
     try:
         parsed_data, page_url = parse_page(driver, TARGET_URL)

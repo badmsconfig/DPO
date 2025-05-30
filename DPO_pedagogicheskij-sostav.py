@@ -37,11 +37,11 @@ def parse_page(url):
         chrome_options.add_argument("--headless")  # Запуск в фоновом режиме
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--enable-unsafe-swiftshader")  # Добавляем флаг для подавления предупреждений WebGL
+        chrome_options.add_argument("--enable-unsafe-swiftshader")  # Для подавления предупреждений WebGL
 
         # Укажите путь к chromedriver.exe, если он не в PATH
-        # service = Service('D:/path/to/chromedriver.exe')
-        service = Service()  # Если chromedriver в PATH
+        # service = Service('D:/python_work/DPO/DPO/chromedriver.exe')  # Раскомментируйте и укажите путь, если нужно
+        service = Service()  # Используется, если chromedriver в PATH
         driver = webdriver.Chrome(service=service, options=chrome_options)
 
         # Загружаем страницу
@@ -94,12 +94,13 @@ def parse_pdf(pdf_url):
 
 
 def save_to_markdown(title, page_url, pdf_text):
-    """Сохраняет текст в формате Markdown."""
+    """Сохраняет текст в формате Markdown с именем DPO_pedagogicheskij-sostav.md."""
     markdown_content = f"# {title}\n\n[Ссылка на страницу]({page_url})\n\n{pdf_text}"
 
-    with open('output.md', 'w', encoding='utf-8') as f:
+    output_file = 'DPO_pedagogicheskij-sostav.md'
+    with open(output_file, 'w', encoding='utf-8') as f:
         f.write(markdown_content)
-    print("Результат сохранен в output.md")
+    print(f"Результат сохранен в {output_file}")
 
 
 def main():

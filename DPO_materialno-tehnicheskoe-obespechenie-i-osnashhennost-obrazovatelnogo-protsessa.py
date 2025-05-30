@@ -20,9 +20,6 @@ def get_driver():
 SELECTORS = {
     "main_title": (By.CSS_SELECTOR, "h1.page__content-title"),
     "content_desc": (By.CSS_SELECTOR, "div.page__content-desc"),
-    "table_rows": (By.CSS_SELECTOR, "div.table table tbody tr"),
-    "row_title": (By.CSS_SELECTOR, "td:nth-child(1)"),
-    "row_data": (By.CSS_SELECTOR, "td:nth-child(2)"),
     "ordered_lists": (By.CSS_SELECTOR, "div.page__content-desc ol"),
     "unordered_lists": (By.CSS_SELECTOR, "div.page__content-desc ul")
 }
@@ -69,26 +66,10 @@ def parse_page(driver, url):
                     content_blocks.append(f"### {text}")
                 elif elem.find_elements(By.TAG_NAME, "strong"):
                     content_blocks.append(f"**{text}**")
+                elif elem.find_elements(By.TAG_NAME, "em"):
+                    content_blocks.append(f"*{text}*")
                 else:
                     content_blocks.append(text)
-
-            elif elem.tag_name == "div" and "table" in elem.get_attribute("class"):
-                # Обработка таблицы
-                try:
-                    rows = elem.find_elements(*SELECTORS["table_rows"])
-                    table_content = ["Условия доступной среды\tНаличие"]
-                    for row in rows:
-                        try:
-                            row_title = row.find_element(*SELECTORS["row_title"]).text.strip()
-                            row_data = row.find_element(*SELECTORS["row_data"]).text.strip()
-                            if row_title and row_data:
-                                table_content.append(f"{row_title}\t{row_data}")
-                            print(f"Строка таблицы: {row_title} - {row_data}")
-                        except Exception as e:
-                            print(f"Ошибка при парсинге строки таблицы: {str(e)}")
-                    content_blocks.append("\n".join(table_content))
-                except Exception as e:
-                    print(f"Ошибка при парсинге таблицы: {str(e)}")
 
             elif elem.tag_name == "ol":
                 # Обработка упорядоченного списка
@@ -120,7 +101,7 @@ def parse_page(driver, url):
     return result, url
 
 # Функция для сохранения данных в Markdown-файл
-def save_to_markdown(data, url, filename="DPO_materialno_tehnicheskoe.md"):
+def save_to_markdown(data, url, filename="DPO_materialno-tehnicheskoe-obespechenie-i-osnashhennost-obrazovatelnogo-protsessa.md"):
     content = []
     # Добавление заголовка и ссылки
     for item in data:
@@ -145,7 +126,7 @@ def save_to_markdown(data, url, filename="DPO_materialno_tehnicheskoe.md"):
 
 # Основной блок программы
 if __name__ == "__main__":
-    TARGET_URL = "https://academydpo.org/materialno-tehnicheskoe-obespechenie-i-osnashhennost-obrazovatelnogo-protsessa-dostupnaya-sreda"
+    TARGET_URL = "https://academydpo.org/materialno-tehnicheskoe-obespechenie-i-osnashhennost-obrazovatelnogo-protsessa"
     driver = get_driver()
     try:
         parsed_data, page_url = parse_page(driver, TARGET_URL)

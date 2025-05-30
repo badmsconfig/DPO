@@ -96,7 +96,7 @@ def parse_page(driver, url):
     return result, url
 
 # Функция для сохранения данных в Markdown-файл
-def save_to_markdown(data, url, filename="DPO_document_verification.md"):
+def save_to_markdown(data, url, filename="DPO_servis-proverki-dokumentov.md"):
     content = []
     for item in data:
         if item[0] == "title":

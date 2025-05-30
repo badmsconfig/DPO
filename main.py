@@ -2,74 +2,122 @@ import os
 import subprocess
 import glob
 import datetime
+import sys
+import logging
+from pathlib import Path
 
-BASE_DIR = r"D:\python_work\DPO\DPO"
+# Настройка кодировки консоли на UTF-8
+sys.stdout.reconfigure(encoding='utf-8')
+sys.stderr.reconfigure(encoding='utf-8')
+
+# Настройка логирования
+LOG_FILE = Path(r"D:\python_work\dpo\dpo") / f"parser_log_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s: %(message)s',
+    handlers=[
+        logging.FileHandler(LOG_FILE, encoding='utf-8'),
+        logging.StreamHandler(sys.stdout),
+    ]
+)
+
+BASE_DIR = Path(r"D:\python_work\dpo\dpo")
 SCRIPTS = [
     "DPO_aktsii.py",
     "DPO_dokument-company.py",
     "DPO_dokumenty.py",
-    "DPO_FAQ.py",
+    "DPO_dostupnaya-sreda-v-ooo-akademiya-dpo.py",
+    "DPO_faq.py",
     "DPO_finhozdeyat.py",
     "DPO_glavnaya.py",
+    "DPO_kontakty.py",
     "DPO_master-of-business-administration-mba.py",
+    "DPO_materialno-tehnicheskoe-obespechenie-i-osnashhennost-obrazovatelnogo-protsessa.py",
+    "DPO_materialno-tehnicheskoe-obespechenie-i-osnashhennost-obrazovatelnogo-protsessa-dostupnaya-sreda.py",
     "DPO_matertehnichobespechenieiosnashhennost.py",
+    "DPO_mezhdunarodnoe-sotrudnichestvo.py",
     "DPO_napravleniya-main.py",
+    "DPO_obrazovanie.py",
     "DPO_onas.py",
     "DPO_oplata-obrazovatelnyh-uslug.py",
+    "DPO_organizatsiya-pitaniya.py",
     "DPO_osnovnye-svedeniya.py",
     "DPO_partnery.py",
     "DPO_pedagogicheskij-sostav.py",
     "DPO_platnye-obrazovatelnye-uslugi.py",
+    "DPO_politika-konfidentsialnosti-personalnyh-dannyh.py",
     "DPO_rukovodstvo.py",
     "DPO_rukovodstvo-i-pedagogicheskij-sostav.py",
+    "DPO_servis-proverki-dokumentov.py",
+    "DPO_sotrudnichestvo.py",
+    "DPO_stipendii.py",
     "DPO_stipendii-i-inye-vidy-materialnoj-podderzhki.py",
+    "DPO_struktura-i-organy-upravleniya.py",
     "DPO_vakantnye-mesta-dlya-priema-perevoda.py",
-    "PDO_dostupnaya-sreda-v-ooo-akademiya-dpo.py",
-    "PDO_kontakty.py",
-    "PDO_materialno-tehnicheskoe-obespechenie-i-osnashhennost-obrazovatelnogo-protsessa.py",
-    "PDO_materialno-tehnicheskoe-obespechenie-i-osnashhennost-obrazovatelnogo-protsessa-dostupnaya-sreda.py",
-    "PDO_mezhdunarodnoe-sotrudnichestvo.py",
-    "PDO_obrazovanie.py",
-    "PDO_organizatsiya-pitaniya.py",
-    "PDO_politika-konfidentsialnosti-personalnyh-dannyh.py",
-    "PDO_servis-proverki-dokumentov.py",
-    "PDO_sotrudnichestvo.py",
-    "PDO_stipendii.py",
-    "PDO_struktura-i-organy-upravleniya.py",
-    "PDO_vakantnye-mesta-dlya-priema-perevoda.py"
+    "DPO_vakantnye-mesta-dlya-priema-perevoda1.py",
+
 ]
 TIMESTAMP = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-OUTPUT_FILE = os.path.join(BASE_DIR, f"Раздел_1_{TIMESTAMP}.md")
+OUTPUT_FILE = BASE_DIR / f"Раздел_1_{TIMESTAMP}.md"
 
 
 def run_scripts():
     """Запускает все скрипты из списка и проверяет создание Markdown-файлов."""
-    os.chdir(BASE_DIR)
-    python_exe = os.path.join(BASE_DIR, r"..\venv\Scripts\python.exe")
     successful_scripts = []
     missing_files = []
 
+    # Проверка пути к Python из виртуального окружения
+    python_exe = BASE_DIR.parent / "venv" / "Scripts" / "python.exe"
+    if not python_exe.exists():
+        logging.error(f"Python из виртуального окружения не найден: {python_exe}")
+        return successful_scripts, missing_files
+
+    # Проверка существующих файлов
+    available_scripts = {f.name.lower(): f for f in BASE_DIR.glob("*.py")}
+    logging.info(f"Найдено Python-скриптов в {BASE_DIR}: {len(available_scripts)}")
+
     for script in SCRIPTS:
-        expected_md = os.path.join(BASE_DIR, script.replace(".py", ".md"))
+        script_path = BASE_DIR / script
+        expected_md = BASE_DIR / script.replace(".py", ".md")
+
+        # Проверка наличия скрипта
+        if not script_path.exists():
+            # Проверяем с учетом регистра
+            script_lower = script.lower()
+            if script_lower in available_scripts:
+                logging.warning(f"Скрипт {script} не найден, но найден {available_scripts[script_lower]}. Исправьте регистр в SCRIPTS.")
+                script_path = available_scripts[script_lower]
+            else:
+                logging.error(f"Скрипт {script} не найден в {BASE_DIR}")
+                missing_files.append(expected_md)
+                continue
+
+        logging.info(f"Запуск скрипта: {script}")
         try:
-            print(f"Запуск скрипта: {script}")
-            result = subprocess.run([python_exe, script], capture_output=True, text=True, timeout=300)
+            result = subprocess.run(
+                [str(python_exe), str(script_path)],
+                capture_output=True,
+                text=True,
+                timeout=300,
+                encoding='utf-8',
+                errors='replace',
+            )
             if result.returncode == 0:
-                print(f"Скрипт {script} успешно выполнен")
+                logging.info(f"Скрипт {script} успешно выполнен")
                 successful_scripts.append(script)
-                if os.path.exists(expected_md):
-                    print(f"Создан файл: {expected_md}")
+                if expected_md.exists():
+                    logging.info(f"Создан файл: {expected_md}")
                 else:
-                    print(f"Ошибка: файл {expected_md} не создан")
+                    logging.error(f"Файл {expected_md} не создан")
                     missing_files.append(expected_md)
             else:
-                print(f"Ошибка при выполнении {script}: {result.stderr}")
+                logging.error(f"Ошибка при выполнении {script}: {result.stderr}")
                 missing_files.append(expected_md)
         except subprocess.TimeoutExpired:
-            print(f"Скрипт {script} превысил время выполнения (5 минут)")
+            logging.error(f"Скрипт {script} превысил время выполнения (5 минут)")
             missing_files.append(expected_md)
         except Exception as e:
-            print(f"Исключение при выполнении {script}: {str(e)}")
+            logging.error(f"Исключение при выполнении {script}: {str(e)}")
             missing_files.append(expected_md)
 
     return successful_scripts, missing_files
@@ -77,9 +125,9 @@ def run_scripts():
 
 def combine_markdown_files(missing_files):
     """Объединяет все Markdown-файлы в один и записывает информацию о пропущенных файлах."""
-    markdown_files = glob.glob(os.path.join(BASE_DIR, "*.md"))
-    print(f"Найдено Markdown-файлов: {len(markdown_files)}")
-    print(f"Список файлов: {markdown_files}")
+    markdown_files = list(BASE_DIR.glob("*.md"))
+    logging.info(f"Найдено Markdown-файлов: {len(markdown_files)}")
+    logging.info(f"Список файлов: {[str(f) for f in markdown_files]}")
 
     with open(OUTPUT_FILE, "w", encoding="utf-8") as outfile:
         outfile.write("# Раздел 1\n\n")
@@ -87,7 +135,7 @@ def combine_markdown_files(missing_files):
 
         if not markdown_files:
             outfile.write("Ошибка: Markdown-файлы не найдены.\n")
-            print("Ошибка: Markdown-файлы не найдены.")
+            logging.error("Markdown-файлы не найдены")
             return
 
         added_files = []
@@ -96,37 +144,37 @@ def combine_markdown_files(missing_files):
                 continue
             try:
                 with open(md_file, "r", encoding="utf-8") as infile:
-                    outfile.write(f"## Данные из файла: {os.path.basename(md_file)}\n\n")
+                    outfile.write(f"## Данные из файла: {md_file.name}\n\n")
                     outfile.write(infile.read())
                     outfile.write("\n\n---\n\n")
-                print(f"Файл {md_file} добавлен в итоговый отчет")
+                logging.info(f"Файл {md_file} добавлен в итоговый отчет")
                 added_files.append(md_file)
             except Exception as e:
-                print(f"Ошибка при обработке {md_file}: {str(e)}")
-                outfile.write(f"## Ошибка: файл {os.path.basename(md_file)} не добавлен\n\n")
+                logging.error(f"Ошибка при обработке {md_file}: {str(e)}")
+                outfile.write(f"## Ошибка: файл {md_file.name} не добавлен\n\n")
                 outfile.write(f"Причина: {str(e)}\n\n---\n\n")
 
         if missing_files:
             outfile.write("## Пропущенные или не созданные файлы\n\n")
             for missing_file in missing_files:
                 if missing_file not in added_files:
-                    outfile.write(f"- {os.path.basename(missing_file)}: не создан или не добавлен\n")
-                    print(f"Файл {missing_file} не был создан или добавлен")
+                    outfile.write(f"- {missing_file.name}: не создан или не добавлен\n")
+                    logging.error(f"Файл {missing_file} не был создан или добавлен")
             for md_file in markdown_files:
                 expected_mds = [script.replace(".py", ".md") for script in SCRIPTS]
-                if os.path.basename(md_file) not in expected_mds and md_file != OUTPUT_FILE:
-                    outfile.write(f"- {os.path.basename(md_file)}: найден, но не ожидался\n")
-                    print(f"Файл {md_file} найден, но не ожидался")
+                if md_file.name not in expected_mds and md_file != OUTPUT_FILE:
+                    outfile.write(f"- {md_file.name}: найден, но не ожидался\n")
+                    logging.warning(f"Файл {md_file} найден, но не ожидался")
 
 
 def main():
-    print("Запуск обработки скриптов...")
+    logging.info("Запуск обработки скриптов...")
     successful_scripts, missing_files = run_scripts()
-    print(f"\nУспешно выполнено скриптов: {len(successful_scripts)} из {len(SCRIPTS)}")
-    print(f"Пропущенные файлы: {len(missing_files)}")
-    print("\nОбъединение Markdown-файлов...")
+    logging.info(f"Успешно выполнено скриптов: {len(successful_scripts)} из {len(SCRIPTS)}")
+    logging.info(f"Пропущенные файлы: {len(missing_files)}")
+    logging.info("Объединение Markdown-файлов...")
     combine_markdown_files(missing_files)
-    print(f"\nИтоговый файл создан: {OUTPUT_FILE}")
+    logging.info(f"Итоговый файл создан: {OUTPUT_FILE}")
 
 
 if __name__ == "__main__":
